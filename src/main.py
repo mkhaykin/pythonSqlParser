@@ -2,6 +2,7 @@ import os
 from typing import List, Set, Tuple
 
 import sqlglot
+from sqlglot.dialects.postgres import Postgres
 
 
 def get_tables_from_expression(sql_exp: sqlglot.Expression) -> Set[str]:
@@ -28,7 +29,7 @@ def analyze_sql_file_content(sql_content: str) -> Set[str]:
     Возвращает множество имен таблиц в запросе.
     """
     result = set()
-    expressions = sqlglot.parse(sql_content)
+    expressions = sqlglot.parse(sql_content, dialect=Postgres)
     for expr in expressions:
         if expr:
             result.update(get_tables_from_expression(expr))
@@ -63,9 +64,20 @@ def analyze_sql_files(directory: str) -> List[Tuple[str, List[str]]]:
 
 
 def main() -> None:
-    results = analyze_sql_files("./samples/")
+    def clear(text: str) -> str:
+        return '.'.join(map(lambda x: x.strip('"'),text.split(".")))
+
+    results = analyze_sql_files(r"C:\Users\m.khaykin\git\eahd_205_206_207\src\eahd-205\etl_fer_run_scrypt-main")
     for file_path, tables in results:
         print(f"{file_path}: {tables}")
+
+    # подбиваем все таблицы (ну и виды приедут)
+    tables_all = set()
+    for _, tables in results:
+        tables_all.update(map(clear, tables))
+
+    print("ТАБЛИЦЫ / ВИДЫ:")
+    print(*sorted(tables_all), sep="\n")
 
 
 if __name__ == "__main__":
